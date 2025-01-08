@@ -10,13 +10,15 @@ def plot_loss(results:dict , save_folder:Path, show:bool=False):
     plt.figure()
     plt.plot(epochs, train_losses, label='Train Loss')
     plt.plot(epochs, test_losses, label='Test Loss')
+    plt.xticks(epochs)
     plt.xlabel('Epoch')
     plt.ylabel('Loss (NLL)')
     plt.legend()
     plt.title('Train and Test Loss')
+
+    plt.savefig(save_folder/"loss_plot.png")
     if show:
         plt.show()
-    plt.savefig(save_folder/"loss_plot.png")
     plt.close()
 
 def plot_confusion_matrix(epoch:int, results:dict, save_folder:Path, show:bool=False):
@@ -31,9 +33,9 @@ def plot_confusion_matrix(epoch:int, results:dict, save_folder:Path, show:bool=F
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
     disp.plot(cmap=plt.cm.Blues)
     plt.title(f"Train Confusion Matrix Epoch {epoch}")
+    plt.savefig(save_folder/f"train_confusion_matrix_epoch_{epoch}.png")
     if show:
         plt.show()
-    plt.savefig(save_folder/f"train_confusion_matrix_epoch_{epoch}.png")
     plt.close()
 
     # Do the same for the test set
@@ -44,8 +46,8 @@ def plot_confusion_matrix(epoch:int, results:dict, save_folder:Path, show:bool=F
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes)
     disp.plot(cmap=plt.cm.Blues)
     plt.title(f"Test Confusion Matrix Epoch {epoch}")
+    plt.savefig(save_folder/f"test_confusion_matrix_epoch_{epoch}.png")
     if show:
         plt.show()
-    plt.savefig(save_folder/f"test_confusion_matrix_epoch_{epoch}.png")
 
     plt.close()
