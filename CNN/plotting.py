@@ -11,6 +11,7 @@ def plot_loss(results:dict , save_folder:Path, show:bool=False):
     plt.plot(epochs, train_losses, label='Train Loss')
     plt.plot(epochs, test_losses, label='Test Loss')
     plt.xticks(epochs)
+    plt.xticks(rotation=90)  # Rotate x-axis tick labels
     plt.xlabel('Epoch')
     plt.ylabel('Loss (NLL)')
     plt.legend()

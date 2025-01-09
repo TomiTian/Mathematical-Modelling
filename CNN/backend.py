@@ -274,7 +274,7 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
     * path_data: Path Folder to save/retrieve the raw data to/from
 
     * Returns: dict with all results of either the trained or loaded model
-    * Optionally returns dict with results of loaded model (re-tested)
+    * might also return some re-tested results.
     """
     # Check if weights exist
     weights_exist = (path_results / "cnn_weights_best.pt").exists() and (path_results / "cnn_weights_final.pt").exists()
