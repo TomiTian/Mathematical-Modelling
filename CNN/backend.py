@@ -300,7 +300,7 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
         final_test_accuracy, t_final = forward_prop_test_set(download_folder, path_results, "final")
         
         print("Now let us check if accuracy is the same as the one we calculated from the weights")
-        print("Loaded vs calculated")
+        print("     Loaded vs calculated")
         print(f"Best accuracy {results['best_epoch_accuracy']} vs {best_test_accuracy}")
         print(f"Final accuracy {results['final_epoch_accuracy']} vs {final_test_accuracy}")
         print(f"It took {t_final} seconds to calculate the predictions")
