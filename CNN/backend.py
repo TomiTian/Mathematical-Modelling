@@ -14,27 +14,27 @@ import pickle
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.conv1 = nn.Conv2d(1, 30, 3, 1)
+        self.conv2 = nn.Conv2d(30, 60, 3, 1)
         self.dropout1 = nn.Dropout(0.25)
         self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, 128)
+        self.fc1 = nn.Linear(8640, 128)
         self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
+        c1 = F.relu(x)
+        x = self.conv2(c1)
+        c2 = F.relu(x)
+        c3 = F.max_pool2d(c2, 2)
+        x = self.dropout1(c3)
         x = torch.flatten(x, 1)
         x = self.fc1(x)
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
         output = F.log_softmax(x, dim=1)
-        return output
+        return output, c1, c2, c3
 
 
 def train(args, model, device, train_loader, optimizer, epoch):
@@ -45,7 +45,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
+        output, _ ,__, ___ = model(data)
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
@@ -76,7 +76,7 @@ def test(model, device, test_loader):
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)
+            output, _ ,__, ___ = model(data)
             test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
             preds = output.argmax(dim=1, keepdim=True).squeeze()
             all_preds.extend(preds.cpu().numpy())
@@ -130,7 +130,8 @@ def forward_prop_test_set(download_folder:Path, path_results: Path, mode:str):
         test_preds, test_targets = [], []
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            output = model(data)
+            
+            output, _ ,__, ___ = model(data)
             preds = output.argmax(dim=1, keepdim=True).squeeze()
             test_preds.extend(preds.cpu().numpy())
             test_targets.extend(target.cpu().numpy())
@@ -147,7 +148,7 @@ def forward_prop_test_set(download_folder:Path, path_results: Path, mode:str):
     if acc2 != accuracy:
         print("WARNING: Accuracy calculated with 2 different methods does not match up")
 
-    return accuracy, t
+    return accuracy, t, model
 
 
 
@@ -258,7 +259,7 @@ def main(save_folder: Path, download_folder: Path, parser: argparse.ArgumentPars
     with open(save_folder / "results.pkl", 'wb') as f:
         pickle.dump(results, f)
 
-    return results
+    return results, model
 
 
 
@@ -284,10 +285,10 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
     # If either force, or weights/results do not exist, run the train/test loop
     if not weights_exist or not results_exist:
         print("Can not find Weights or results, will have to run the train/test loop")
-        results = main(path_results, download_folder, parser=parser)
+        results, model = main(path_results, download_folder, parser=parser)
     elif force:
         print("Force is enabled, will run the train/test loop")
-        results = main(path_results, download_folder, parser=parser)
+        results, model = main(path_results, download_folder, parser=parser)
     
     else:
         # Can load the weights and results from pickle etc.
@@ -296,8 +297,8 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
             print("Loaded previous results from file")
             #! RETEST WITH LOADED WEIGHTS TO REPRODUCE ACCURACY
 
-        best_test_accuracy, t_best = forward_prop_test_set(download_folder, path_results, "best")
-        final_test_accuracy, t_final = forward_prop_test_set(download_folder, path_results, "final")
+        best_test_accuracy, t_best, model = forward_prop_test_set(download_folder, path_results, "best")
+        final_test_accuracy, t_final, model = forward_prop_test_set(download_folder, path_results, "final")
         
         print("Now let us check if accuracy is the same as the one we calculated from the weights")
         print("     Loaded vs calculated")
@@ -306,7 +307,8 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
         print(f"It took {t_final} seconds to calculate the predictions")
         print(f"That is an average of {t_final/10000} seconds per image")
 
-    return results
+    return results, model
+
 
 
 
