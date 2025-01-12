@@ -238,8 +238,8 @@ def main(save_folder: Path, download_folder: Path, parser: argparse.ArgumentPars
         torch.save(model.state_dict(), save_folder / "cnn_weights_final.pt")
 
     # We calculate the final accuracies for both set of weights.
-    final_accuracy, t_final = forward_prop_test_set(download_folder, save_folder, "final")
-    best_accuracy, t_best = forward_prop_test_set(download_folder, save_folder, "best")
+    final_accuracy, t_final, model = forward_prop_test_set(download_folder, save_folder, "final")
+    best_accuracy, t_best, model = forward_prop_test_set(download_folder, save_folder, "best")
 
     # Compile the results
     results = { "losses_train": train_losses,
