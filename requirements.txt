@@ -1,2 +1,5 @@
 torch
 torchvision==0.20.0
+numpy
+matplotlib
+scikit-learn
