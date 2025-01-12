@@ -262,7 +262,27 @@ def main(save_folder: Path, download_folder: Path, parser: argparse.ArgumentPars
     return results, model
 
 
+def pred_single_image(download_folder:Path, results_path:Path):
+    # Measure time to load weights and predict a single image
+    start_time = time.perf_counter()
+    model = Net()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.load_state_dict(torch.load(results_path / "cnn_weights_best.pt", map_location=device, weights_only=True))
+    model.to(device)
+    model.eval()
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+    test_dataset = datasets.MNIST(download_folder, train=False, transform=transform)
+    random_image, _ = test_dataset[np.random.randint(len(test_dataset))]
+    random_image = random_image.unsqueeze(0).to(device)
+    with torch.no_grad():
+        output, _, __, ___ = model(random_image)
+        pred = output.argmax(dim=1, keepdim=True).squeeze()
+    end_time = time.perf_counter()
 
+    return end_time - start_time
 
 
 
@@ -273,7 +293,8 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
     * path_results: Path Folder to save/retrieve the model weights
     * path_img: Path Folder to save the images to/from
     * path_data: Path Folder to save/retrieve the raw data to/from
-
+    * single_image: bool Predict a single image to measure loading time.
+    
     * Returns: dict with all results of either the trained or loaded model
     * might also return some re-tested results.
     """
@@ -306,8 +327,13 @@ def load_or_train_CNN(path_results: Path, download_folder:Path, parser, force:bo
         print(f"Final accuracy {results['final_epoch_accuracy']} vs {final_test_accuracy}")
         print(f"It took {t_final} seconds to calculate the predictions")
         print(f"That is an average of {t_final/10000} seconds per image")
+        
+        # print(f"Loading time for a single image (not an average): {pred_single_image(download_folder, path_results)} seconds")
 
     return results, model
+
+
+
 
 
 
